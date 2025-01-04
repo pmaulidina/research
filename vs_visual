@@ -1,0 +1,78 @@
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
+
+# Data yang sama seperti sebelumnya
+data = {
+    "Kadar_Air": [40, 40, 40, 40, 40, 40,
+                  50, 50, 50, 50, 50, 50,
+                  60, 60, 60, 60, 60, 60,
+                  70, 70, 70, 70, 70, 70,
+                  80, 80, 80, 80, 80, 80],
+    "Visual": [14.80, 1.7, 11.20, 13.60, 5.9, 12.80,
+               15.30, 11.00, 4.80, 6.30, 17.10, 2.70,
+               4.00, 3.90, 2.80, 3.20, 2.40, 5.80,
+               13.90, 6.60, 9.40, 12.90, 12.30, 23.60,
+               5.10, 5.40, 11.00, 7.40, 43.30, 11.70],
+}
+
+df = pd.DataFrame(data)
+
+def polynomial_regression_analysis(df, dependent_var, degree=2):
+    # Menghitung rata-rata untuk setiap kadar air
+    means = df.groupby('Kadar_Air')[dependent_var].mean().reset_index()
+    
+    X = means['Kadar_Air'].values.reshape(-1, 1)
+    y = means[dependent_var].values
+    
+    # Membuat fitur polinomial
+    poly = PolynomialFeatures(degree=degree)
+    X_poly = poly.fit_transform(X)
+    
+    # Fit model
+    model = sm.OLS(y, X_poly).fit()
+    
+    # Membuat data untuk plotting smooth curve
+    X_plot = np.linspace(X.min(), X.max(), 100).reshape(-1, 1)
+    X_plot_poly = poly.transform(X_plot)
+    y_plot = model.predict(X_plot_poly)
+    
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['Kadar_Air'], df[dependent_var], alpha=0.3, label='Data Asli')
+    plt.scatter(means['Kadar_Air'], means[dependent_var], color='red', 
+               s=100, label='Rata-rata')
+    plt.plot(X_plot, y_plot, color='green', label=f'Regresi Polinomial (degree={degree})')
+    
+    # Menambahkan statistik ke plot
+    stats_text = f'R² = {model.rsquared:.4f}\n'
+    stats_text += f'Adjusted R² = {model.rsquared_adj:.4f}\n'
+    stats_text += f'P-values:\n'
+    for i, p in enumerate(model.pvalues):
+        stats_text += f'β{i}: {p:.4f}\n'
+    
+    plt.text(0.05, 0.95, stats_text, transform=plt.gca().transAxes, 
+             verticalalignment='top', bbox=dict(boxstyle='round', 
+             facecolor='white', alpha=0.8))
+    
+    plt.title(f'Analisis Regresi Polinomial: Kadar Air vs {dependent_var}')
+    plt.xlabel('Kadar Air (%)')
+    plt.ylabel(dependent_var)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
+    print(f"\nHasil Analisis untuk {dependent_var}")
+    print("="*50)
+    print(model.summary())
+    return model
+
+# Melakukan analisis untuk setiap variabel
+variables = ['Visual', 'Resapan_Air', 'Beban_Lentur']
+models = {}
+
+for var in variables:
+    print(f"\nAnalisis untuk {var}")
+    models[var] = polynomial_regression_analysis(df, var, degree=2)
