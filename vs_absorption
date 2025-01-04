@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+# Data eksperimen (6 kali pengulangan)
+data = {
+   "Kadar_Air": [40, 50, 60, 70, 80],
+   "Resapan_Air": [19.7, 20.9, 21.3, 21.4, 22.2],
+}
+
+# Membuat DataFrame
+df = pd.DataFrame(data)
+
+# Membuat figure dengan 3 subplot
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 6))
+
+# Fungsi untuk regresi linier dengan plot di subplot tertentu
+def linear_regression(x, y, label, ax):
+   x_const = sm.add_constant(x)
+   model = sm.OLS(y, x_const).fit()
+   
+   # Plot data dan garis regresi
+   ax.scatter(x, y, label="Data", alpha=0.7)
+   ax.plot(x, model.predict(x_const), color='red', label="Garis Regresi")
+   
+   # Menambahkan nilai R² dan persamaan regresi
+   r2 = f"R² = {model.rsquared:.3f}"
+   equation = f"y = {model.params[1]:.2f}x + {model.params[0]:.2f}"
+   
+   ax.text(0.05, 0.95, r2 + "\n" + equation,
+           transform=ax.transAxes,
+           verticalalignment='top',
+           bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+   
+   ax.set_title(f"Kadar Air vs {label}")
+   ax.set_xlabel("Kadar Air (%)")
+   ax.set_ylabel(label)
+   ax.legend()
+   ax.grid(True)
+   
+   return model
+
+# Melakukan regresi untuk setiap parameter
+model2 = linear_regression(df["Kadar_Air"], df["Resapan_Air"], "Resapan Air", ax2)
+
+plt.tight_layout()
+plt.show()
