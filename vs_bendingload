@@ -1,0 +1,53 @@
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+# Data eksperimen (6 kali pengulangan)
+data = {
+   "Kadar_Air": [40, 40, 40, 40, 40, 40,
+                 50, 50, 50, 50, 50, 50,
+                 60, 60, 60, 60, 60, 60,
+                 70, 70, 70, 70, 70, 70,
+                 80, 80, 80, 80, 80, 80],
+   "Beban_Lentur": [324.3, 357.9, 371.2, 370.2, 362.0, 253.8,
+                    337.5, 333.4, 305.9, 296.7, 336.5, 319.2,
+                    301.8, 301.8, 313.0, 316.1, 319.2, 296.7,
+                    286.5, 309.0, 321.2, 263.1, 304.9, 305.9,
+                    275.3, 261.0, 280.4, 294.7, 290.6, 281.4],
+}
+
+# Membuat DataFrame
+df = pd.DataFrame(data)
+
+# Fungsi untuk regresi linier dengan plot di subplot tertentu
+def linear_regression(x, y, label, ax):
+   x_const = sm.add_constant(x)
+   model = sm.OLS(y, x_const).fit()
+   
+   # Plot data dan garis regresi
+   ax.scatter(x, y, label="Data", alpha=0.7)
+   ax.plot(x, model.predict(x_const), color='red', label="Garis Regresi")
+   
+   # Menambahkan nilai R² dan persamaan regresi
+   r2 = f"R² = {model.rsquared:.3f}"
+   equation = f"y = {model.params[1]:.2f}x + {model.params[0]:.2f}"
+   
+   ax.text(0.05, 0.95, r2 + "\n" + equation,
+           transform=ax.transAxes,
+           verticalalignment='top',
+           bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+   
+   ax.set_title(f"Kadar Air vs {label}")
+   ax.set_xlabel("Kadar Air (%)")
+   ax.set_ylabel(label)
+   ax.legend()
+   ax.grid(True)
+   
+   return model
+
+# Melakukan regresi untuk setiap parameter
+model3 = linear_regression(df["Kadar_Air"], df["Beban_Lentur"], "Beban Lentur")
+
+plt.tight_layout()
+plt.show()
